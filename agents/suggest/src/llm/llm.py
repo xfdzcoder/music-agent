@@ -1,6 +1,6 @@
 from langchain_deepseek import ChatDeepSeek
 
-llm = ChatDeepSeek(
+deepseek = ChatDeepSeek(
     model="deepseek-chat",
     temperature=0,
     max_tokens=None,
