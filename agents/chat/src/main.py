@@ -5,11 +5,7 @@ from base.core.src.config.config import load_config
 
 load_config()
 
-from router.suggest import router
-
 app = FastAPI()
-app.include_router(router)
-
 
 
 if __name__ == "__main__":
