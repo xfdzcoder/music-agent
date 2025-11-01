@@ -12,3 +12,4 @@ wheels/
 # Custom
 .idea
 .env.dev
+.env.test
