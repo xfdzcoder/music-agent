@@ -1,4 +1,4 @@
-from model.model import MusicInfo
+from core.model.model import MusicInfo
 
 def check_exist_library(music_info: MusicInfo) -> bool:
     """ 检查音乐是否已存在

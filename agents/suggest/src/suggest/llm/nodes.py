@@ -1,12 +1,12 @@
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnableConfig
 
-from base.core.src.langfuse_manager import langfuse, langfuse_handler
+from core.langfuse.langfuse_manager import langfuse, langfuse_handler
 
-from llm.llm import deepseek
-from llm.tools import check_exist_library
-from model.model import MusicInfoList
-from base.core.src.graph import SuggestState
+from core.llm.llm import deepseek
+from suggest.llm.tools import check_exist_library
+from core.model.model import MusicInfoList
+from core.graph.graph import SuggestState
 
 
 def suggest(state: SuggestState) -> SuggestState:

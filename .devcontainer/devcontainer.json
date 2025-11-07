@@ -1,0 +1,20 @@
+{
+  "name": "music-agent",
+  "image": "ghcr.io/astral-sh/uv:python3.11-bookworm",
+  "remoteUser": "root",
+  "runArgs": [
+    "--network=host"
+  ],
+  mounts: [
+    
+  ],
+  "customizations": {
+    "jetbrains": {
+      "settings": {
+        "com.intellij:app:HttpConfigurable.use_proxy_pac": true,
+        "com.intellij:app:Vcs-Log-App-Settings.show_changes_from_parents": true
+      },
+      "backend": "PyCharm"
+    }
+  }
+}

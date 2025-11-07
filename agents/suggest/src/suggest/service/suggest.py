@@ -1,9 +1,9 @@
 from langchain_core.runnables import RunnableConfig
 
-from base.core.src.graph import State, SuggestState
-from base.core.src.langfuse_manager import langfuse_handler
-from llm.graph import graph
-from model.model import MusicInfo, MusicInfoList
+from core.graph.graph import SuggestState
+from core.langfuse.langfuse_manager import langfuse_handler
+from suggest.llm.graph import graph
+from core.model.model import MusicInfo, MusicInfoList
 
 
 def suggest_by_one(music_info: MusicInfo):

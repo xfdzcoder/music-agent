@@ -1,8 +1,8 @@
 from fastapi import APIRouter
 from starlette.responses import StreamingResponse
 
-from model.model import MusicInfo
-from service.suggest import suggest_by_one
+from core.model.model import MusicInfo
+from suggest.service.suggest import suggest_by_one
 
 router = APIRouter(
     prefix="/suggest",

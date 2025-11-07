@@ -9,9 +9,9 @@ def main():
 
     from llm.graph import graph
     from model.model import MusicInfoList
-    from base.core.src.graph import SuggestState
+    from base.core.src.graph.graph import SuggestState
     from model.model import MusicInfo
-    from base.core.src.langfuse_manager import langfuse_handler
+    from base.core.src.langfuse.langfuse_manager import langfuse_handler
     from langchain_core.runnables import RunnableConfig
 
     state = SuggestState(messages=[], input_music_list=MusicInfoList(root=[MusicInfo(name="任我行", author="陈奕迅")]))

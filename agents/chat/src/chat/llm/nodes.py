@@ -1,0 +1,56 @@
+import uuid
+
+from ag_ui.core import TextMessageStartEvent, TextMessageContentEvent, TextMessageEndEvent
+from langchain_core.messages import AIMessageChunk, message_chunk_to_message
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.runnables import RunnableConfig
+from langgraph.types import StreamWriter
+
+from core.graph.graph import ChatState
+from core.langfuse.langfuse_manager import langfuse, langfuse_handler
+from core.llm.llm import deepseek
+
+
+async def chat(state: ChatState, writer: StreamWriter) -> ChatState:
+    prompt = langfuse.get_prompt("chat", label="latest", type="chat")
+    langchain_prompt = ChatPromptTemplate(
+        prompt.get_langchain_prompt(),
+        metadata={"langfuse_prompt": prompt}
+    )
+    chat_chain = langchain_prompt | deepseek
+
+    message_id = None
+    ai_message_chunk = AIMessageChunk(content="")
+    async for chunk in chat_chain.astream(
+            {
+                "input": state.messages[-1],
+                "history": state.messages[:-1],
+                "summary": state.summary,
+            },
+        config=RunnableConfig(callbacks=[langfuse_handler])
+    ):
+        chunk : AIMessageChunk = chunk
+        print(chunk)
+
+        if message_id is None:
+            message_id = str(uuid.uuid4())
+            writer(TextMessageStartEvent(
+                message_id=message_id,
+            ))
+
+        if not chunk.content:
+            continue
+
+        writer(TextMessageContentEvent(
+            message_id=message_id,
+            delta=chunk.content
+        ))
+        ai_message_chunk += chunk
+
+    writer(TextMessageEndEvent(
+        message_id=message_id,
+    ))
+
+    return ChatState(
+        messages=[message_chunk_to_message(ai_message_chunk)]
+    ).model_dump()

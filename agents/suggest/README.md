@@ -3,5 +3,5 @@
 ### RUN
 
 ```shell
-uv run src/main.py
+uv run src/suggest/main.py
 ```

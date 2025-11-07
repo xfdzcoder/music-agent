@@ -1,7 +1,7 @@
 import uvicorn
 from fastapi import FastAPI
 
-from base.core.src.config.config import load_config
+from core.config.config import load_config
 
 load_config()
 
