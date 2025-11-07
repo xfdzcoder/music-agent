@@ -15,7 +15,12 @@ async def gen_ag_ui_chat_resp(agent_input: RunAgentInput):
         input={
             "messages": [message.model_dump() for message in agent_input.messages],
         },
-        config=RunnableConfig(callbacks=[langfuse_handler]),
+        config=RunnableConfig(
+            callbacks=[langfuse_handler],
+            configurable={
+                "thread_id": agent_input.thread_id
+            }
+        ),
         stream_mode=["custom"]
     ):
         logger.info(chunk)
