@@ -23,4 +23,4 @@ __graph_builder.add_conditional_edges(
     }
 )
 
-graph = __graph_builder.compile()
+_graph = __graph_builder.compile()

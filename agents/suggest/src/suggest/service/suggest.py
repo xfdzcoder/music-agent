@@ -8,7 +8,7 @@ from core.model.model import MusicInfo, MusicInfoList
 
 def suggest_by_one(music_info: MusicInfo):
     state = SuggestState(messages=[], input_music_list=MusicInfoList(root=[music_info]))
-    return graph.invoke(
+    return _graph.invoke(
         state,
         config=RunnableConfig(callbacks=[langfuse_handler]),
     )

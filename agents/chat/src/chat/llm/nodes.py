@@ -7,11 +7,16 @@ from langchain_core.runnables import RunnableConfig
 from langgraph.types import StreamWriter
 
 from core.graph.graph import ChatState
-from core.langfuse.langfuse_manager import langfuse, langfuse_handler
+from core.langfuse.langfuse_manager import langfuse
 from core.llm.llm import deepseek
+from core.logger.logger import logger
 
 
-async def chat(state: ChatState, writer: StreamWriter) -> ChatState:
+async def chat(
+        state: ChatState,
+        config: RunnableConfig,
+        writer: StreamWriter,
+) -> ChatState:
     prompt = langfuse.get_prompt("chat", label="latest", type="chat")
     langchain_prompt = ChatPromptTemplate(
         prompt.get_langchain_prompt(),
@@ -23,14 +28,13 @@ async def chat(state: ChatState, writer: StreamWriter) -> ChatState:
     ai_message_chunk = AIMessageChunk(content="")
     async for chunk in chat_chain.astream(
             {
-                "input": state.messages[-1],
-                "history": state.messages[:-1],
-                "summary": state.summary,
+                "input": state.messages[-1].content,
+                "messages_history": state.messages[:-1]
             },
-        config=RunnableConfig(callbacks=[langfuse_handler])
+            config=config
     ):
-        chunk : AIMessageChunk = chunk
-        print(chunk)
+        chunk: AIMessageChunk = chunk
+        logger.info(chunk)
 
         if message_id is None:
             message_id = str(uuid.uuid4())

@@ -1,9 +1,4 @@
-from langchain_deepseek import ChatDeepSeek
+from langchain.chat_models import init_chat_model
 
-deepseek = ChatDeepSeek(
-    model="deepseek-chat",
-    temperature=0,
-    max_tokens=None,
-    timeout=None,
-    max_retries=2,
-)
+
+deepseek = init_chat_model(model="deepseek-chat", model_provider="deepseek")
