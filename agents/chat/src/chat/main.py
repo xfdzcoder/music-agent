@@ -6,14 +6,14 @@ from fastapi import FastAPI
 import core.config  # noqa: F401
 from chat.llm.graph import init_graph
 from core.logger.logger import logger
-from core.memory.memory import init_memory
+from core.memory.async_memory import ainit_memory
 
 from chat.router.chat import router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info("Starting up...")
-    await init_memory()
+    await ainit_memory()
     await init_graph()
     yield
 

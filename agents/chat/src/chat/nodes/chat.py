@@ -2,12 +2,11 @@ import uuid
 
 from ag_ui.core import TextMessageStartEvent, TextMessageContentEvent, TextMessageEndEvent
 from langchain_core.messages import AIMessageChunk, message_chunk_to_message
-from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnableConfig
 from langgraph.types import StreamWriter
 
 from core.graph.graph import ChatState
-from core.langfuse.langfuse_manager import langfuse
+from core.langfuse.langfuse_manager import get_prompt
 from core.llm.llm import deepseek
 from core.logger.logger import logger
 
@@ -17,11 +16,7 @@ async def chat(
         config: RunnableConfig,
         writer: StreamWriter,
 ) -> ChatState:
-    prompt = langfuse.get_prompt("chat", label="latest", type="chat")
-    langchain_prompt = ChatPromptTemplate(
-        prompt.get_langchain_prompt(),
-        metadata={"langfuse_prompt": prompt}
-    )
+    langchain_prompt = get_prompt("chat/chat", type="chat")
     chat_chain = langchain_prompt | deepseek
 
     message_id = None
@@ -34,7 +29,6 @@ async def chat(
             config=config
     ):
         chunk: AIMessageChunk = chunk
-        logger.info(chunk)
 
         if message_id is None:
             message_id = str(uuid.uuid4())

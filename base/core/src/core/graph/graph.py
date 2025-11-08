@@ -22,4 +22,4 @@ class SuggestState(State):
         return 10 if self.target_count is None else self.target_count
 
 class ChatState(State):
-    pass
+    should_remember: bool = False

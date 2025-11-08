@@ -18,11 +18,12 @@ async def gen_ag_ui_chat_resp(agent_input: RunAgentInput):
         config=RunnableConfig(
             callbacks=[langfuse_handler],
             configurable={
-                "thread_id": agent_input.thread_id
+                "thread_id": agent_input.thread_id,
+                # FIXME 2025/11/8 xfdzcoder: 暂时没有用户这个维度，默认为 temp
+                "user_id": "temp"
             }
         ),
         stream_mode=["custom"]
     ):
-        logger.info(chunk)
         if isinstance(chunk, tuple):
             yield ag_ui.base(chunk[1])
