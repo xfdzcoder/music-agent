@@ -7,8 +7,9 @@ from langgraph.types import StreamWriter
 
 from core.graph.graph import ChatState
 from core.langfuse.langfuse_manager import get_prompt
+from core.langfuse.prompt_param import ChatChatParam
 from core.llm.llm import deepseek
-from core.logger.logger import logger
+from core.memory.async_memory import asearch
 
 
 async def chat(
@@ -22,10 +23,11 @@ async def chat(
     message_id = None
     ai_message_chunk = AIMessageChunk(content="")
     async for chunk in chat_chain.astream(
-            {
-                "input": state.messages[-1].content,
-                "messages_history": state.messages[:-1]
-            },
+            ChatChatParam(
+                input=state.messages[-1].content,
+                messages_history=state.messages[:-1],
+                memories=await asearch(state.messages[-1].content),
+            ).model_dump(),
             config=config
     ):
         chunk: AIMessageChunk = chunk

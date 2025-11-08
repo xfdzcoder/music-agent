@@ -1,4 +1,5 @@
 import uuid
+from typing import Literal
 
 from langgraph.checkpoint.redis import AsyncRedisSaver
 from langgraph.store.redis import AsyncRedisStore
@@ -30,10 +31,21 @@ async def ainit_memory():
 
 
 class MemoryItem(BaseModel):
+    role: Literal["assistant"] = "assistant"
     content: str
 
+    @classmethod
+    def add_memories(cls, old_memories: list["MemoryItem"], new_memories: list["MemoryItem"]) -> list["MemoryItem"]:
+        return old_memories or [] + new_memories or []
 
-async def put_memory(memory_item: MemoryItem, *, namespace_prefix: str = "memories"):
+
+async def aput(memory_item: MemoryItem, *, namespace_prefix: str = "memories"):
     # FIXME 2025/11/8 xfdzcoder: 暂时没有用户这个维度，默认为 temp
     namespace = (namespace_prefix, "temp")
     await store.aput(namespace, str(uuid.uuid4()), memory_item.model_dump())
+
+async def asearch(query: str, *, namespace_prefix: str = "memories") -> list[MemoryItem]:
+    # FIXME 2025/11/8 xfdzcoder: 暂时没有用户这个维度，默认为 temp
+    namespace = (namespace_prefix, "temp")
+    memories = await store.asearch(namespace, query=query)
+    return [memory.value for memory in memories]
