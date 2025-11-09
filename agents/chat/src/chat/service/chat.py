@@ -10,7 +10,7 @@ async def gen_ag_ui_chat_resp(agent_input: RunAgentInput):
     yield ag_ui.run_start(agent_input)
 
 
-    async for chunk in get_graph().astream(
+    async for event in get_graph().astream(
         input={
             "messages": [message.model_dump() for message in agent_input.messages],
         },
@@ -24,5 +24,9 @@ async def gen_ag_ui_chat_resp(agent_input: RunAgentInput):
         ),
         stream_mode=["custom"]
     ):
-        if isinstance(chunk, tuple):
-            yield ag_ui.base(chunk[1])
+        if not isinstance(event, tuple):
+            continue
+        event_type = event[0]
+        event_content = event[1]
+        if event_type == "custom":
+            yield ag_ui.base(event_content)
