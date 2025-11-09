@@ -3,7 +3,6 @@ from langchain_core.runnables import RunnableConfig
 
 from chat.llm.graph import get_graph
 from core.langfuse.langfuse_manager import langfuse_handler
-from core.logger.logger import logger
 from core.utils import ag_ui
 
 
