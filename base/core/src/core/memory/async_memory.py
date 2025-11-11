@@ -4,30 +4,31 @@ from typing import Literal
 from langgraph.checkpoint.redis import AsyncRedisSaver
 from langgraph.store.redis import AsyncRedisStore
 from pydantic import BaseModel
-from redis.asyncio import Redis as AsyncRedis
 
-from core.config import config
+from core.client.redis import get_async_redis
 
-redis_client: AsyncRedis
-checkpointer: AsyncRedisSaver
-store: AsyncRedisStore
+_checkpointer: AsyncRedisSaver
+_store: AsyncRedisStore
 
 
 async def ainit_memory():
-    global redis_client, checkpointer, store
-    async_redis_client = AsyncRedis(
-        host=config.get_env("REDIS_HOST"),
-        port=config.get_env("REDIS_PORT"),
-        username=config.get_env("REDIS_USERNAME"),
-        password=config.get_env("REDIS_PASSWORD"),
-        db=config.get_env("REDIS_DB")
-    )
-    async with AsyncRedisSaver(redis_client=async_redis_client) as async_checkpointer:
-        checkpointer = async_checkpointer
-        await checkpointer.asetup()
-    async with AsyncRedisStore(redis_client=async_redis_client) as async_store:
-        store = async_store
-        await store.setup()
+    global _checkpointer, _store
+    async with AsyncRedisSaver(redis_client=get_async_redis()) as async_checkpointer:
+        _checkpointer = async_checkpointer
+        await _checkpointer.asetup()
+    async with AsyncRedisStore(redis_client=get_async_redis()) as async_store:
+        _store = async_store
+        await _store.setup()
+
+
+def get_checkpointer():
+    global _checkpointer
+    return _checkpointer
+
+
+def get_store():
+    global _store
+    return _store
 
 
 class MemoryItem(BaseModel):
@@ -42,10 +43,11 @@ class MemoryItem(BaseModel):
 async def aput(memory_item: MemoryItem, *, namespace_prefix: str = "memories"):
     # FIXME 2025/11/8 xfdzcoder: 暂时没有用户这个维度，默认为 temp
     namespace = (namespace_prefix, "temp")
-    await store.aput(namespace, str(uuid.uuid4()), memory_item.model_dump())
+    await get_store().aput(namespace, str(uuid.uuid4()), memory_item.model_dump())
+
 
 async def asearch(query: str, *, namespace_prefix: str = "memories") -> list[MemoryItem]:
     # FIXME 2025/11/8 xfdzcoder: 暂时没有用户这个维度，默认为 temp
     namespace = (namespace_prefix, "temp")
-    memories = await store.asearch(namespace, query=query)
+    memories = await get_store().asearch(namespace, query=query)
     return [memory.value for memory in memories]

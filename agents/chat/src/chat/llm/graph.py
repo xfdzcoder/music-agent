@@ -2,14 +2,14 @@ from langgraph.constants import START, END
 from langgraph.graph import StateGraph
 from langgraph.graph.state import CompiledStateGraph
 
-from chat.nodes.chat import chat
-from chat.nodes.remember import remember
+from chat.node.chat import chat
+from chat.node.remember import remember
 from core.graph.graph import ChatState
 from core.memory import async_memory
 
 _graph : CompiledStateGraph
 
-async def init_graph():
+async def ainit_graph():
     global _graph
     graph_builder = StateGraph(ChatState)
 
@@ -21,8 +21,8 @@ async def init_graph():
     graph_builder.add_edge(chat.__name__, END)
 
     _graph = graph_builder.compile(
-        checkpointer=async_memory.checkpointer,
-        store=async_memory.store
+        checkpointer=async_memory.get_checkpointer(),
+        store=async_memory.get_store()
     )
 
 def get_graph():
