@@ -4,7 +4,8 @@ from sqlalchemy.orm import Mapped, mapped_column, Session
 
 from core.db import postgres
 from core.db.models import Base
-from core.music.model import MusicInfo
+
+from core.db.models.base import BaseDto
 from core.utils.snowflake_utils import gen_snowflake_id
 
 
@@ -24,6 +25,18 @@ class MusicInfoModel(Base):
 
     # 新增一个 tsvector 列，用来存全文索引
     search_vector: Mapped[str] = mapped_column(TSVECTOR)
+
+
+class MusicInfo(BaseDto):
+    uuid: str
+    filepath: str
+    album: str
+    title: str
+    artist: list[str]
+    date: int
+    lyrics: str
+    album_artist: str
+    time_length: int
 
 
 def save_music_batch(music_infos: list[MusicInfo]):

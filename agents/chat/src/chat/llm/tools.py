@@ -1,8 +1,7 @@
 from langchain_core.tools import tool
 
-from core.db.models.music_info import search_music
+from core.db.models.music_info import search_music, MusicInfo
 from core.logger.logger import logger
-from core.music.model import MusicInfo
 
 @tool
 def search_music_info_by_title(keyword: str) -> list[MusicInfo]:

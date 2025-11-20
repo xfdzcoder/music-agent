@@ -5,8 +5,8 @@ import uuid
 from mutagen import File, FileType
 
 from core.config import config
+from core.db.models.music_info import MusicInfo
 from core.logger.logger import logger
-from core.music.model import MusicInfo
 from core.utils.list_utils import get_first
 
 

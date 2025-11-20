@@ -1,5 +1,6 @@
 from datetime import datetime
 
+from pydantic import BaseModel, ConfigDict
 from sqlalchemy import BigInteger, DateTime
 from sqlalchemy.orm import DeclarativeBase, mapped_column, Mapped
 
@@ -15,3 +16,6 @@ class Base(DeclarativeBase):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime, default=datetime.now, onupdate=datetime.now
     )
+
+class BaseDto(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
