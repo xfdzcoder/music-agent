@@ -12,25 +12,32 @@ _ENVS = Literal[
     "LANGFUSE_SECRET_KEY",
     "LANGFUSE_PUBLIC_KEY",
     "LANGFUSE_BASE_URL",
-    "REDIS_HOST",
-    "REDIS_PORT",
-    "REDIS_USERNAME",
-    "REDIS_PASSWORD",
-    "REDIS_DB",
+
+    "MUSIC_FOLDER",
+    "MUSIC_TAG_MAPPING",
+
+    "POSTGRES_USER",
+    "POSTGRES_PASSWORD",
+    "POSTGRES_HOST",
+    "POSTGRES_PORT",
+    "POSTGRES_DB",
 ]
-_default : dict[_ENVS, str] = {
+_default: dict[_ENVS, str] = {
     "APP_ENV": "dev",
     "DEEPSEEK_API_KEY": "",
     "LANGFUSE_SECRET_KEY": "",
     "LANGFUSE_PUBLIC_KEY": "",
     "LANGFUSE_BASE_URL": "",
-    "REDIS_HOST": "127.0.0.1",
-    "REDIS_PORT": "6379",
-    "REDIS_USERNAME": "",
-    "REDIS_PASSWORD": "",
-    "REDIS_DB": "0",
-}
 
+    "MUSIC_FOLDER": "",
+    "MUSIC_TAG_MAPPING": "album=album,title=title,artist=artist,date=date,lyrics=lyrics,album_artist=albumartist",
+
+    "POSTGRES_USER": "",
+    "POSTGRES_PASSWORD": "",
+    "POSTGRES_HOST": "",
+    "POSTGRES_PORT": "",
+    "POSTGRES_DB": "",
+}
 
 
 def load_config():
@@ -45,11 +52,26 @@ def _get_default(key: _ENVS):
     return _default[key]
 
 
-def get_env(key: _ENVS, *, default=None):
+def get_env(key: _ENVS, *, default=None) -> str:
     val = os.getenv(key, default)
-    if val is not None:
+    if val:
         return val
     return _get_default(key)
+
+
+_music_tag_mapping: dict[str, str] | None = None
+
+
+def music_tag_mapping() -> dict[str, str]:
+    global _music_tag_mapping
+    if _music_tag_mapping:
+        return _music_tag_mapping
+    mapping_str = get_env("MUSIC_TAG_MAPPING")
+    _music_tag_mapping = dict()
+    for kv in mapping_str.split(","):
+        kv_split = kv.split("=")
+        _music_tag_mapping[kv_split[0]] = kv_split[1]
+    return _music_tag_mapping
 
 
 if __name__ == '__main__':

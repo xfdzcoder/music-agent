@@ -8,7 +8,7 @@ from ag_ui.encoder import EventEncoder
 from langchain_core.messages import HumanMessage
 from starlette.responses import StreamingResponse
 
-from llm.graph import graph
+from chat.llm.graph import get_graph
 
 
 # @router.post("")
@@ -282,12 +282,12 @@ async def langgraph_research_endpoint(input_data: RunAgentInput):
             # Different LangGraph versions have different methods to run graphs
             try:
                 # Try newer LangGraph API first
-                result = graph.invoke([HumanMessage(content=query)])
+                result = get_graph().invoke([HumanMessage(content=query)])
                 print(f"[DEBUG] LangGraph invoke API succeeded")
             except AttributeError as e:
                 print(f"[DEBUG] LangGraph invoke API failed, trying older API: {str(e)}")
                 # Fall back to older LangGraph API
-                result = graph([HumanMessage(content=query)])
+                result = get_graph()([HumanMessage(content=query)])
                 print(f"[DEBUG] LangGraph older API succeeded")
 
             print(f"[DEBUG] LangGraph result type: {type(result)}, content: {str(result)[:100]}...")

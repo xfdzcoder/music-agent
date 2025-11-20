@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 class MusicInfo(BaseModel):
@@ -11,5 +11,7 @@ class MusicInfo(BaseModel):
     lyrics: str
     album_artist: str
     time_length: int
+
+    model_config = ConfigDict(from_attributes=True)
 
 

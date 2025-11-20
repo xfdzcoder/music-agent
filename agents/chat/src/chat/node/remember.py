@@ -1,12 +1,14 @@
+from langchain.agents import create_agent
 from langchain_core.runnables import RunnableConfig
-from langgraph.runtime import Runtime
+from langgraph.types import StreamWriter
 from pydantic import BaseModel, Field
 
-from core.graph.graph import ChatState
-from core.langfuse.langfuse_manager import get_prompt
-from core.langfuse.prompt_param import PromptParam
+from core.context.context import ContextHolder
+from core.llm.graph.graph import ChatState
+from core.llm.langfuse.langfuse_manager import get_prompt
+from core.llm.langfuse.prompt_param import PromptParam
 from core.llm.llm import deepseek
-from core.memory.async_memory import aput, MemoryItem
+from core.llm.memory.postgres import put, MemoryItem
 
 
 class ShouldRememberResult(BaseModel):
@@ -14,23 +16,31 @@ class ShouldRememberResult(BaseModel):
     content: str = Field(description="需要被记忆的内容")
 
 
-async def remember(
+def remember(
         state: ChatState,
         config: RunnableConfig,
+        writer: StreamWriter
 ) -> ChatState:
-    langchain_prompt = get_prompt("chat/remember", type="chat")
-    structured_llm = deepseek.with_structured_output(ShouldRememberResult, method="json_mode")
-    chat_chain = langchain_prompt | structured_llm
+    messages = get_prompt("chat/remember", prompt_param=PromptParam(input=state.messages[-1].content))
+    structured_agent = create_agent(deepseek, response_format=ShouldRememberResult)
 
     result: ShouldRememberResult | None = None
-    async for chunk in chat_chain.astream(
-            PromptParam(input=state.messages[-1].content),
-            config=config
+    for event in structured_agent.stream(
+            { # noqa
+                "messages": messages
+            },
+            config=config,
+            context=ContextHolder.get(),
+            stream_mode=["updates"]
     ):
-        result = chunk
+        if not isinstance(event, tuple):
+            continue
+        stream_mode, chunk = event
+        model = chunk["model"]
+        if model:
+            result = model["structured_response"]
 
-    if result is not None and isinstance(result.should_remember, bool):
+    if result is not None and isinstance(result.should_remember, bool) and result.should_remember:
         state.should_remember = result.should_remember
-    if state.should_remember:
-        await aput(MemoryItem(content=result.content))
+        put(MemoryItem(content=result.content))
     return state

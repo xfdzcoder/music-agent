@@ -4,12 +4,12 @@ from langgraph.graph.state import CompiledStateGraph
 
 from chat.node.chat import chat
 from chat.node.remember import remember
-from core.graph.graph import ChatState
-from core.memory import async_memory
+from core.llm.graph.graph import ChatState
+from core.llm.memory import postgres
 
 _graph : CompiledStateGraph
 
-async def ainit_graph():
+def init_graph():
     global _graph
     graph_builder = StateGraph(ChatState)
 
@@ -21,8 +21,8 @@ async def ainit_graph():
     graph_builder.add_edge(chat.__name__, END)
 
     _graph = graph_builder.compile(
-        checkpointer=async_memory.get_checkpointer(),
-        store=async_memory.get_store()
+        checkpointer=postgres.get_checkpointer(),
+        store=postgres.get_store()
     )
 
 def get_graph():

@@ -1,56 +1,77 @@
 import uuid
 
-from ag_ui.core import TextMessageStartEvent, TextMessageContentEvent, TextMessageEndEvent
-from langchain_core.messages import AIMessageChunk, message_chunk_to_message
+from ag_ui.core import TextMessageStartEvent, TextMessageContentEvent, TextMessageEndEvent, ToolCallResultEvent
+from langchain.agents import create_agent
+from langchain_core.messages import ToolMessage, convert_to_openai_messages
 from langchain_core.runnables import RunnableConfig
 from langgraph.types import StreamWriter
 
-from core.graph.graph import ChatState
-from core.langfuse.langfuse_manager import get_prompt
-from core.langfuse.prompt_param import ChatChatParam
+from chat.llm.tools import search_music_info_by_title
+from core.context.context import ContextHolder
+from core.llm.graph.graph import ChatState
+from core.llm.langfuse.langfuse_manager import get_prompt
+from core.llm.langfuse.prompt_param import PromptParam
 from core.llm.llm import deepseek
-from core.memory.async_memory import asearch
+from core.llm.memory.postgres import search
 
 
-async def chat(
+def chat(
         state: ChatState,
         config: RunnableConfig,
         writer: StreamWriter,
 ) -> ChatState:
-    langchain_prompt = get_prompt("chat/chat", type="chat")
-    chat_chain = langchain_prompt | deepseek
+    tools_agent = create_agent(deepseek, [search_music_info_by_title])
+    messages = get_prompt(
+        "chat/chat",
+        prompt_param=PromptParam(input=state.messages[-1].content),
+        messages_history=convert_to_openai_messages(state.messages[:-1]),
+        memories=search(state.messages[-1].content)
+    )
 
     message_id = None
-    ai_message_chunk = AIMessageChunk(content="")
-    async for chunk in chat_chain.astream(
-            ChatChatParam(
-                input=state.messages[-1].content,
-                messages_history=state.messages[:-1],
-                memories=await asearch(state.messages[-1].content),
-            ).model_dump(),
-            config=config
+    new_ai_message = None
+    print(messages)
+    for event in tools_agent.stream(
+            input={ # noqa
+                "messages": messages
+            },
+            config=config,
+            context=ContextHolder.get(),
+            stream_mode=["messages", "updates"]
     ):
-        chunk: AIMessageChunk = chunk
-
-        if message_id is None:
-            message_id = str(uuid.uuid4())
-            writer(TextMessageStartEvent(
-                message_id=message_id,
-            ))
-
-        if not chunk.content:
+        print(event)
+        if not isinstance(event, tuple):
             continue
-
-        writer(TextMessageContentEvent(
-            message_id=message_id,
-            delta=chunk.content
-        ))
-        ai_message_chunk += chunk
+        stream_mode = event[0]
+        chunk = event[1]
+        if stream_mode == "messages":
+            ai_message_chunk = chunk[0]
+            if message_id is None:
+                message_id = str(uuid.uuid4())
+                writer(TextMessageStartEvent(
+                    message_id=message_id,
+                ))
+            if not ai_message_chunk.content:
+                continue
+            writer(TextMessageContentEvent(
+                message_id=message_id,
+                delta=ai_message_chunk.content
+            ))
+        elif stream_mode == "updates":
+            if "model" in chunk:
+                new_ai_message = chunk["model"]["messages"][-1]
+            elif "tools" in chunk:
+                tool_message : ToolMessage = chunk["tools"]["messages"][-1]
+                writer(ToolCallResultEvent(
+                    message_id=message_id,
+                    tool_call_id=tool_message.tool_call_id,
+                    content=str(tool_message.content)
+                ))
 
     writer(TextMessageEndEvent(
         message_id=message_id,
     ))
 
     return ChatState(
-        messages=[message_chunk_to_message(ai_message_chunk)]
+        messages=[new_ai_message]
     ).model_dump()

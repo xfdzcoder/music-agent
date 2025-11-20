@@ -18,10 +18,8 @@ async def load_from_dir() -> list[MusicInfo]:
             filepath = os.path.join(root, filename)
             audio = File(filepath)
             if audio is None:
-                continue  # 不是音频文件，跳过
-
-            task = asyncio.create_task(parse_audio(audio, filepath))
-            tasks.append(task)
+                continue
+            tasks.append(asyncio.create_task(parse_audio(audio, filepath)))
     return await asyncio.gather(*tasks, return_exceptions=True)
 
 
@@ -44,4 +42,4 @@ async def parse_audio(audio: FileType, filepath: str) -> MusicInfo:
 
 
 if __name__ == '__main__':
-    asyncio.run(load_from_dir())
+    load_from_dir()

@@ -28,5 +28,5 @@ class ContextHolder:
         cls._context.reset(token)
 
     @classmethod
-    def user_id(cls):
+    def user_id(cls) -> str:
         return cls.get().user_id

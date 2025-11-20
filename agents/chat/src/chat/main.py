@@ -4,21 +4,24 @@ import uvicorn
 from fastapi import FastAPI
 
 import core.config  # noqa: F401
+from core.db.postgres import init_db, run_migrations
+from core.llm.memory.postgres import init_memory
 from core.logger.logger import logger
-from core.client.redis import ainit_redis
-from core.memory.async_memory import ainit_memory
-from chat.llm.graph import ainit_graph
+from chat.llm.graph import init_graph
+from chat.service.music import aload_local_music
 
 from chat.router.chat import router
 from core.middleware.middleware import ContextHolderMiddleware
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(fastapi: FastAPI):
     logger.info("Starting up...")
-    await ainit_redis()
-    await ainit_memory()
-    await ainit_graph()
+    init_db()
+    run_migrations()
+    init_memory()
+    init_graph()
+    await aload_local_music()
     yield
 
 

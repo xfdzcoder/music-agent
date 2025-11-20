@@ -13,7 +13,7 @@ if __name__ == "__main__":
     from chat.node.remember import ShouldRememberResult
     from core.llm.llm import deepseek
     from core.logger.logger import logger
-    from core.langfuse.langfuse_manager import langfuse_handler
+    from core.llm.langfuse.langfuse_manager import langfuse_handler
 
     msg = [
         ("system", """
