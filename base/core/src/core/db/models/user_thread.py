@@ -57,3 +57,15 @@ def add_or_update_thread(thread_id: str, name: str = "Chat"):
             session.add(thread)
 
         session.commit()
+
+
+def get_name_by_thread_id() -> str:
+    with postgres.get_session() as session:
+        stmt = select(UserThreadModel).where(
+            UserThreadModel.user_id == ContextHolder.user_id(),
+            UserThreadModel.thread_id == ContextHolder.thread_id()
+        )
+        user_thread : UserThreadModel = session.execute(stmt).scalar_one_or_none()
+        if user_thread:
+            return user_thread.name
+        return "Chat"

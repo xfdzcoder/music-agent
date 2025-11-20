@@ -10,7 +10,7 @@ from chat.llm.tools import search_music_info_by_title
 from core.context.context import ContextHolder
 from core.llm.graph.graph import ChatState
 from core.llm.langfuse.langfuse_manager import get_prompt
-from core.llm.langfuse.prompt_param import PromptParam
+from core.llm.langfuse.prompt_param import ChatParam
 from core.llm.llm import deepseek
 from core.llm.memory.postgres import search
 
@@ -23,7 +23,7 @@ def chat(
     tools_agent = create_agent(deepseek, [search_music_info_by_title])
     messages = get_prompt(
         "chat/chat",
-        prompt_param=PromptParam(input=state.messages[-1].content),
+        prompt_param=ChatParam(input=state.messages[-1].content),
         messages_history=convert_to_openai_messages(state.messages[:-1]),
         memories=search(state.messages[-1].content)
     )
@@ -39,7 +39,6 @@ def chat(
             context=ContextHolder.get(),
             stream_mode=["messages", "updates"]
     ):
-        print(event)
         if not isinstance(event, tuple):
             continue
         stream_mode = event[0]

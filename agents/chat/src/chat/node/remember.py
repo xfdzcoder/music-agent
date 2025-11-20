@@ -6,7 +6,7 @@ from pydantic import BaseModel, Field
 from core.context.context import ContextHolder
 from core.llm.graph.graph import ChatState
 from core.llm.langfuse.langfuse_manager import get_prompt
-from core.llm.langfuse.prompt_param import PromptParam
+from core.llm.langfuse.prompt_param import ChatParam
 from core.llm.llm import deepseek
 from core.llm.memory.postgres import put, MemoryItem
 
@@ -21,7 +21,7 @@ def remember(
         config: RunnableConfig,
         writer: StreamWriter
 ) -> ChatState:
-    messages = get_prompt("chat/remember", prompt_param=PromptParam(input=state.messages[-1].content))
+    messages = get_prompt("chat/remember", prompt_param=ChatParam(input=state.messages[-1].content))
     structured_agent = create_agent(deepseek, response_format=ShouldRememberResult)
 
     result: ShouldRememberResult | None = None

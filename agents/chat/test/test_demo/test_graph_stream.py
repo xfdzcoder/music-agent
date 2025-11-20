@@ -14,7 +14,7 @@ from chat.llm.tools import search_music_info_by_title
 from chat.service.music import aload_local_music
 from core.db.postgres import init_db, run_migrations
 from core.llm.langfuse.langfuse_manager import get_prompt
-from core.llm.langfuse.prompt_param import PromptParam
+from core.llm.langfuse.prompt_param import ChatParam
 from core.llm.llm import deepseek
 from core.llm.memory.postgres import init_memory
 from core.logger.logger import logger
@@ -36,7 +36,7 @@ def main():
             memories=[]
         )
         messages: list[BaseMessage] = langchain_prompt.invoke(
-            input=PromptParam(input=state.messages[-1].content).model_dump(),
+            input=ChatParam(input=state.messages[-1].content).model_dump(),
         ).to_messages()
 
         for chunk in agent.stream(

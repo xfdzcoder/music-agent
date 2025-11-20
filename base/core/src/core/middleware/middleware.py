@@ -12,7 +12,7 @@ class ContextHolderMiddleware(BaseHTTPMiddleware):
         # FIXME 2025/11/10 xfdzcoder: 暂时没有用户这个维度，默认为 temp
         user_id = "temp"
         request_id = str(uuid.uuid4())
-        token = ContextHolder.set(Context(user_id=user_id, request_id=request_id))
+        token = ContextHolder.set(Context(user_id=user_id, thread_id="", request_id=request_id))
         try:
             response = await call_next(request)
             response.headers["X-Request-Id"] = request_id
