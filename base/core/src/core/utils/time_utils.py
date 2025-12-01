@@ -1,3 +1,4 @@
+import datetime
 import time
 import threading
 
@@ -45,6 +46,7 @@ class MusicTimer:
             return
         self._running = True
         self._start_ts = time.perf_counter()
+        self._stop_flag = False
 
     def pause(self):
         if not self._running:

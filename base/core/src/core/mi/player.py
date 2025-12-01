@@ -41,10 +41,16 @@ class Player:
         asyncio.create_task(_loop())
 
     def _play_next(self):
-        next_index = self.index + 1
-        if next_index < len(self.playlist):
-            self.timer.stop()
+        self.timer.stop()
+        if self.mode == "loop":
+            next_index = (self.index + 1) % len(self.playlist)
             self.play(self.playlist[next_index])
+        elif self.mode == "order":
+            next_index = self.index + 1
+            if next_index < len(self.playlist):
+                self.play(self.playlist[next_index])
+        else:
+            self.play(self.playlist[self.index])
 
     def play(self, music: MusicInfo):
         if self.music and self.music.uuid != music.uuid:
@@ -69,7 +75,8 @@ class Player:
             "music": self.music if self.music else None,
             "device": self.device if self.device else None,
             "playlist": self.playlist,
-            "position_ms": self.timer.get_position_ms()
+            "position_ms": self.timer.get_position_ms(),
+            "index": self.index,
         }
 
 
