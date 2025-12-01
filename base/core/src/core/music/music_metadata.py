@@ -1,13 +1,17 @@
 import asyncio
+import base64
 import os
+import traceback
 import uuid
 from asyncio import Task
 
 from mutagen import File, FileType
+from mutagen.flac import FLAC, Picture
 
 from core.config import config
 from core.db.models.music_info import MusicInfo
 from core.logger.logger import logger
+from core.music.lrcapi import get_cover
 from core.utils.list_utils import get_first
 
 
@@ -21,7 +25,7 @@ class TaskException(Exception):
 
 async def load_from_dir() -> list[MusicInfo]:
     directory = config.get_env("MUSIC_FOLDER")
-    tasks : list[Task] = []
+    tasks: list[Task] = []
     for root, _, files in os.walk(directory):
         for filename in files:
             filepath = os.path.join(root, filename)
@@ -32,20 +36,25 @@ async def load_from_dir() -> list[MusicInfo]:
             logger.info(f"parsing {filepath}")
             tasks.append(asyncio.create_task(parse_audio(audio, filepath)))
     results = await asyncio.gather(*tasks, return_exceptions=True)
-    succeeds : list[MusicInfo] = []
+    succeeds: list[MusicInfo] = []
     for task, result in zip(tasks, results):
         if isinstance(result, TaskException):
             logger.warning(
-                f"parse error: {result.filepath}\t"
-                f"{result.audio.tags}"
+                f"\nparse error: {result.filepath}\n"
+                f"Cause:\t\t {result.cause}\n"
+                f"Traceback:\t {traceback.format_exc()}\n"
+                f"Tags:\t\t {result.audio.tags}\n"
             )
-        if isinstance(result, MusicInfo):
+        if result is not None and isinstance(result, MusicInfo):
             succeeds.append(result)
     return succeeds
 
 
-async def parse_audio(audio: FileType, filepath: str) -> MusicInfo:
+async def parse_audio(audio: FileType, filepath: str) -> MusicInfo | None:
     try:
+        if not isinstance(audio, FLAC):
+            return None
+        audio: FLAC
         tag_mapping = config.music_tag_mapping()
         tags = audio.tags
         music_info = MusicInfo(
@@ -57,8 +66,15 @@ async def parse_audio(audio: FileType, filepath: str) -> MusicInfo:
             date=get_first(tags[tag_mapping["date"]]),
             lyrics=get_first(tags[tag_mapping["lyrics"]]),
             album_artist=get_first(tags[tag_mapping["album_artist"]]),
-            time_length=int(getattr(audio.info, "length", 0))
+            time_length=int(getattr(audio.info, "length", 0)),
+            pictures=[f"data:image/jpeg;base64,{str(base64.b64encode(picture.data), 'utf-8')}" for picture in audio.pictures]
         )
+        if not music_info.pictures:
+            cover_bytes = get_cover(music_info.album, get_first(music_info.artist))
+            audio.add_picture(Picture(cover_bytes))
+            music_info.pictures = [f"data:image/jpeg;base64,{str(base64.b64encode(cover_bytes), 'utf-8')}"]
+            audio.save()
+
         logger.info(f"loaded {music_info.title}-{','.join(music_info.artist)} in {music_info.filepath}")
         return music_info
     except Exception as e:
@@ -66,4 +82,4 @@ async def parse_audio(audio: FileType, filepath: str) -> MusicInfo:
 
 
 if __name__ == '__main__':
-    load_from_dir()
+    asyncio.run(load_from_dir())

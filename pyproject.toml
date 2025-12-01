@@ -8,11 +8,12 @@ dependencies = []
 
 [tool.uv.sources]
 core = { workspace = true }
-suggest = { workspace = true }
 chat = { workspace = true }
+miservice-fork = { workspace = true }
 
 [tool.uv.workspace]
 members = [
     "agents/*",
-    "base/*"
+    "base/*",
+    "libs/*"
 ]

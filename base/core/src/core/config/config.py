@@ -8,6 +8,7 @@ from core.logger.logger import logger
 
 _ENVS = Literal[
     "APP_ENV",
+    "BASE_URL",
     "DEEPSEEK_API_KEY",
     "LANGFUSE_SECRET_KEY",
     "LANGFUSE_PUBLIC_KEY",
@@ -21,9 +22,16 @@ _ENVS = Literal[
     "POSTGRES_HOST",
     "POSTGRES_PORT",
     "POSTGRES_DB",
+
+    "MI_USERNAME",
+    "MI_PASSWORD",
+
+    "LRC_API_BASE_URL",
+    "LRC_API_KEY",
 ]
 _default: dict[_ENVS, str] = {
     "APP_ENV": "dev",
+    "BASE_URL": "",
     "DEEPSEEK_API_KEY": "",
     "LANGFUSE_SECRET_KEY": "",
     "LANGFUSE_PUBLIC_KEY": "",
@@ -37,6 +45,12 @@ _default: dict[_ENVS, str] = {
     "POSTGRES_HOST": "",
     "POSTGRES_PORT": "",
     "POSTGRES_DB": "",
+
+    "MI_USERNAME": "",
+    "MI_PASSWORD": "",
+
+    "LRC_API_BASE_URL": "http://127.0.0.1:28883",
+    "LRC_API_KEY": "",
 }
 
 

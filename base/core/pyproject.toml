@@ -20,6 +20,7 @@ dependencies = [
     "python-dotenv>=1.2.1",
     "snowflake-id>=1.0.2",
     "sqlalchemy>=2.0.44",
+    "miservice_fork"
 ]
 
 [tool.uv.build-backend]
