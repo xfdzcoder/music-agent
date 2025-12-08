@@ -1,10 +1,12 @@
-import datetime
+import asyncio
 import time
-import threading
+
+from core.context.context import Context, ContextHolder
 
 
 class MusicTimer:
     def __init__(self, tick_ms=10):
+        self.context : Context | None = None
         self.duration_ms = 0
         self.on_finished = None
 
@@ -13,7 +15,6 @@ class MusicTimer:
         self._running = False
 
         # worker
-        self._thread = None
         self._stop_flag = False
         self._tick = tick_ms / 1000.0  # 转换为秒
 
@@ -21,18 +22,14 @@ class MusicTimer:
     # 对象生命周期：创建内部线程
     # ----------------------------------------------------
     def _ensure_worker(self):
-        if self._thread is None or not self._thread.is_alive():
-            self._stop_flag = False
-            self._thread = threading.Thread(
-                target=self._worker_loop,
-                daemon=True
-            )
-            self._thread.start()
+        self._stop_flag = False
+        asyncio.create_task(self._worker_loop())
 
     # ----------------------------------------------------
     # 供外部调用
     # ----------------------------------------------------
-    def load(self, duration_ms, on_finished=None):
+    def load(self, context: Context, duration_ms, on_finished=None):
+        self.context = context
         self.duration_ms = int(duration_ms)
         self.on_finished = on_finished
         self._elapsed_ms = 0.0
@@ -74,12 +71,13 @@ class MusicTimer:
     # ----------------------------------------------------
     # 内部线程逻辑
     # ----------------------------------------------------
-    def _worker_loop(self):
+    async def _worker_loop(self):
+        ContextHolder.set(self.context)
         while not self._stop_flag:
-            self.update()
-            time.sleep(self._tick)
+            await self.update()
+            await asyncio.sleep(self._tick)
 
-    def update(self):
+    async def update(self):
         """计时更新逻辑；由 worker 线程调用"""
         if not self._running:
             return
@@ -90,7 +88,7 @@ class MusicTimer:
             self._running = False
             self._elapsed_ms = float(self.duration_ms)
             if self.on_finished:
-                self.on_finished()
+                await self.on_finished()
 
     # ----------------------------------------------------
     # 对象被回收时自动退出线程（可选）

@@ -7,6 +7,7 @@ from asyncio import Task
 
 from mutagen import File, FileType
 from mutagen.flac import FLAC, Picture
+from mutagen.id3 import PictureType
 
 from core.config import config
 from core.db.models.music_info import MusicInfo
@@ -71,7 +72,7 @@ async def parse_audio(audio: FileType, filepath: str) -> MusicInfo | None:
         )
         if not music_info.pictures:
             cover_bytes = get_cover(music_info.album, get_first(music_info.artist))
-            audio.add_picture(Picture(cover_bytes))
+            audio.add_picture(make_picture(cover_bytes))
             music_info.pictures = [f"data:image/jpeg;base64,{str(base64.b64encode(cover_bytes), 'utf-8')}"]
             audio.save()
 
@@ -79,6 +80,19 @@ async def parse_audio(audio: FileType, filepath: str) -> MusicInfo | None:
         return music_info
     except Exception as e:
         raise TaskException(e, filepath, audio)
+
+
+def make_picture(cover_bytes):
+    pic = Picture()
+    pic.data = cover_bytes
+    pic.type = PictureType.COVER_FRONT
+    pic.mime = "image/jpeg"
+    pic.desc = ""
+    pic.width = 0
+    pic.height = 0
+    pic.depth = 0
+    pic.colors = 0 
+    return pic
 
 
 if __name__ == '__main__':

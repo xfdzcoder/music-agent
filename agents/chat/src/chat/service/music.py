@@ -3,10 +3,9 @@ from pathlib import Path
 from fastapi import HTTPException
 from fastapi.responses import FileResponse
 
-from core.config import config
 from core.db.models.music_info import clear_old_and_save_new, get_by_music_id, find_all
 from core.mi.miservice import get_mina_service
-from core.mi.player import PlayerHolder
+from core.mi.player import PlayerHolder, PlayMode
 from core.music.music_metadata import load_from_dir
 
 
@@ -40,30 +39,26 @@ async def play(music_uuid: str):
     music = get_by_music_id(music_uuid)
     if not music:
         raise Exception("music not found!")
-    if PlayerHolder.is_play():
-        await get_mina_service().player_play(PlayerHolder.device_id())
-    else:
-        await get_mina_service().play_by_music_url(
-            PlayerHolder.device_id(),
-            f"{config.get_env('BASE_URL')}/music/download/{music.uuid}",
-            1
-        )
-    PlayerHolder.play(music)
+    await PlayerHolder.play(music)
 
 
 async def pause():
-    if PlayerHolder.is_play():
-        await get_mina_service().player_pause(PlayerHolder.device_id())
-        PlayerHolder.pause()
+    await PlayerHolder.pause()
 
 
 async def stop():
-    await get_mina_service().player_stop(PlayerHolder.device_id())
-    PlayerHolder.reset()
+    await PlayerHolder.reset()
+
+
+async def set_volume(volume: int):
+    await get_mina_service().player_set_volume(PlayerHolder.device_id(), volume)
+
+async def set_loop_type(loop_type: PlayMode):
+    await PlayerHolder.set_loop_type(loop_type)
 
 
 async def get_all_music():
     all_music = find_all()
     # TODO 2025/11/30 xfdzcoder: 暂时所有音乐作为播放列表
-    PlayerHolder.init_playlist(all_music)
+    await PlayerHolder.init_playlist(all_music)
     return all_music

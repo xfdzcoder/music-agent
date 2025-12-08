@@ -14,7 +14,7 @@ class ContextHolderMiddleware(BaseHTTPMiddleware):
         user_id = "temp"
         request_id = str(uuid.uuid4())
         token = ContextHolder.set(Context(user_id=user_id, thread_id="", request_id=request_id))
-        PlayerHolder.init()
+        await PlayerHolder.init()
         try:
             response = await call_next(request)
             response.headers["X-Request-Id"] = request_id

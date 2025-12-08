@@ -1,3 +1,13 @@
+status:
+    3: none
+    2: pause
+    1: play
+loop:
+    3: 随机
+    0：单曲循环
+    1：列表循环
+    
+
 {
   "code": 0,
   "message": "Msg has been successfully proxy to the device, this service is a simple proxy, if you encounter any problems pls contact ROM's developers directly!!!",

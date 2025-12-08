@@ -3,7 +3,7 @@ from typing import Annotated
 from fastapi import APIRouter, Path
 from starlette.responses import StreamingResponse
 
-from chat.service.music import play, download, stop, pause, get_all_music, get_music_file_path
+from chat.service.music import play, download, stop, pause, get_all_music, get_music_file_path, set_volume
 from core.mi.player import PlayerHolder, PlayMode
 
 router = APIRouter(
@@ -61,12 +61,12 @@ async def update_mode(
 async def update_volume(
         volume: Annotated[int, Path(title="volume")]
 ):
-    PlayerHolder.get().volume = volume
+    await set_volume(volume)
 
 
 @router.get("/state")
 async def state():
-    return PlayerHolder.get().dumps()
+    return await PlayerHolder.get().dumps()
 
 
 @router.delete("/stop/{music_uuid}")
