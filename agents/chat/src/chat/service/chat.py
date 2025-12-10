@@ -39,5 +39,5 @@ async def get_histories():
     return list_thread()
 
 async def get_history(thread_id: str):
-    state = get_graph().aget_state(RunnableConfig(configurable={"thread_id": thread_id, }))
+    state = get_graph().get_state(RunnableConfig(configurable={"thread_id": thread_id, }))
     return state.values["messages"] or []
